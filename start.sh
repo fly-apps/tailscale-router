@@ -4,8 +4,14 @@ echo 'net.ipv6.conf.all.forwarding = 1' | tee -a /etc/sysctl.conf
 sysctl -p /etc/sysctl.conf
 
 /app/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
-/app/tailscale up --authkey=${TAILSCALE_AUTHKEY} --advertise-routes=$(grep fly-local-6pn /etc/hosts | cut -f 1 | cut -d':' -f -3 | awk '{print $1"::/48"}')
+/app/tailscale-router
 
-/app/linux-amd64/dnsproxy -u fdaa::3
+if [ $? -eq 0 ]
+then
+  /app/linux-amd64/dnsproxy -u fdaa::3
+else
+  exit 1
+fi
+
 
 tail -f /dev/null
