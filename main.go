@@ -11,11 +11,6 @@ import (
 	"strings"
 )
 
-//Get AuthKey
-//Run tailscale up
-//Enable routes
-//Enable dns
-
 type keyResp struct {
 	Key string `json:"key"`
 }
@@ -29,7 +24,7 @@ type devicesResp struct {
 
 func main() {
 	fmt.Println("tailscale-router: setting up")
-	tailnet := os.Getenv("TAILNET_NAME")
+	tailnet := "-"
 	api_key := os.Getenv("TAILSCALE_API_TOKEN")
 
 	fmt.Println("tailscale-router: tailnet name", tailnet)
