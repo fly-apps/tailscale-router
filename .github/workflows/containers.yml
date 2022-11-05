@@ -5,6 +5,7 @@ on:
     branches: ['main']
 
 env:
+  goversion: 1.19
   tailscaleversion: 1.32.2
   dnsproxyversion: v0.45.2
 
@@ -27,6 +28,7 @@ jobs:
           tags: latest ${{ env.tailscale_version }}
           containerfiles: Dockerfile
           build-args: |
+            goversion=${{ env.goversion }}
             tailscaleversion=${{ env.tailscaleversion }}
             dnsproxyversion=${{ env.dnsproxyversion }}
       

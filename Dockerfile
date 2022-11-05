@@ -1,12 +1,14 @@
-FROM golang:1.19-alpine as builder
+ARG goversion=1.19
+FROM golang:${goversion}-alpine as builder
 WORKDIR /app
 COPY . ./
 
 RUN go mod download
 RUN go build
 
-FROM alpine:latest
-RUN apk update && apk add ca-certificates iptables ip6tables bash bind-tools jq && rm -rf /var/cache/apk/*
+ARG alpineversion=latest
+FROM alpine:${alpineversion}
+RUN apk --no-cache add ca-certificates iptables ip6tables bash bind-tools jq
 
 ARG tailscaleversion
 ARG dnsproxyversion
