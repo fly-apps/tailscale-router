@@ -5,11 +5,11 @@ COPY . ./
 RUN go mod download
 RUN go build
 
-ARG tailscale_version=1.30.2
-ARG dnsproxyversion=v0.45.2
-
 FROM alpine:latest
 RUN apk update && apk add ca-certificates iptables ip6tables bash bind-tools jq && rm -rf /var/cache/apk/*
+
+ARG tailscale_version=1.30.2
+ARG dnsproxyversion=v0.45.2
 
 WORKDIR /app
 COPY . ./
