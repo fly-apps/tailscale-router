@@ -24,6 +24,7 @@ jobs:
         with:
           image: ${{ github.repository }}
           tags: latest ${{ env.tailscale_version }}
+          containerfiles: Dockerfile
           build-args: |
             tailscale_version=${{ env.tailscale_version }}
       

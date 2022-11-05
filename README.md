@@ -1,5 +1,7 @@
 # tailscale-router
 
+[![Publish container images](https://github.com/fly-apps/tailscale-router/actions/workflows/containers.yml/badge.svg)](https://github.com/fly-apps/tailscale-router/actions/workflows/containers.yml)
+
 ## How to use
 
 1. Create an app  `flyctl apps create my-unique-tailscale-router-app-name`
