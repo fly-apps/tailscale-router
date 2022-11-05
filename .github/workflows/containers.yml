@@ -5,7 +5,8 @@ on:
     branches: ['main']
 
 env:
-  tailscale_version: 1.30.2
+  tailscaleversion: 1.32.2
+  dnsproxyversion: v0.45.2
 
 jobs:
   build-and-push-image:
@@ -26,7 +27,8 @@ jobs:
           tags: latest ${{ env.tailscale_version }}
           containerfiles: Dockerfile
           build-args: |
-            tailscale_version=${{ env.tailscale_version }}
+            tailscaleversion=${{ env.tailscaleversion }}
+            dnsproxyversion=${{ env.dnsproxyversion }}
       
       - name: Push to ghcr.io
         id: push-to-ghcr

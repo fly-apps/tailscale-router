@@ -8,12 +8,12 @@ RUN go build
 FROM alpine:latest
 RUN apk update && apk add ca-certificates iptables ip6tables bash bind-tools jq && rm -rf /var/cache/apk/*
 
-ARG tailscale_version=1.30.2
-ARG dnsproxyversion=v0.45.2
+ARG tailscaleversion
+ARG dnsproxyversion
 
 WORKDIR /app
 COPY . ./
-ENV TSFILE=tailscale_${tailscale_version}_amd64.tgz
+ENV TSFILE=tailscale_${tailscaleversion}_amd64.tgz
 ENV DNSPROXYFILE=dnsproxy-linux-amd64-v0.45.2.tar.gz
 ENV DNSPROXYVERSION=${dnsproxyversion}
 RUN wget https://pkgs.tailscale.com/stable/${TSFILE} && tar xzf ${TSFILE} --strip-components=1
