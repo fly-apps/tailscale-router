@@ -25,7 +25,7 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: ${{ github.repository }}
-          tags: latest ${{ env.tailscale_version }}
+          tags: latest ${{ env.tailscaleversion }}
           containerfiles: Dockerfile
           build-args: |
             goversion=${{ env.goversion }}
