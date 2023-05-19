@@ -6,7 +6,7 @@ on:
 
 env:
   goversion: 1.19
-  tailscaleversion: 1.36.0
+  tailscaleversion: 1.40.1
   dnsproxyversion: v0.45.2
 
 jobs:
