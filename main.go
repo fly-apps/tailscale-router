@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -23,14 +24,15 @@ type devicesResp struct {
 }
 
 func main() {
-	fmt.Println("tailscale-router: setting up")
+	log.SetPrefix("tailscale-router ")
+	log.Println("setting up")
 	tailnet := "-"
 	api_key := os.Getenv("TAILSCALE_API_TOKEN")
 
-	fmt.Println("tailscale-router: tailnet name", tailnet)
-	fmt.Println("tailscale-router: api key", api_key)
+	log.Println("tailnet name", tailnet)
+	log.Println("api key", api_key)
 
-	var jsonData = []byte(`{
+	jsonData := []byte(`{
 		"capabilities": {
 			"devices": {
 				"create": {
@@ -41,39 +43,39 @@ func main() {
 		}
 	}`)
 
-	fmt.Println("tailscale-router: creating auth key")
-	request, err := http.NewRequest("POST", fmt.Sprintf("https://api.tailscale.com/api/v2/tailnet/%s/keys", tailnet), bytes.NewBuffer(jsonData))
+	log.Println("creating auth key")
+	request, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf("https://api.tailscale.com/api/v2/tailnet/%s/keys", tailnet),
+		bytes.NewBuffer(jsonData),
+	)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	request.SetBasicAuth(api_key, "")
 
 	client := &http.Client{}
-	response, error := client.Do(request)
-	if error != nil {
-		fmt.Println("ERROR: Create key")
-		panic(error)
+	response, err := client.Do(request)
+	if err != nil {
+		log.Fatalln("ERROR: Create key", err)
 	}
 	defer response.Body.Close()
 
 	var out keyResp
-	err = json.NewDecoder(response.Body).Decode(&out)
-	if err != nil {
-		fmt.Println("ERROR: Decode key resp")
-		panic(error)
+	if err := json.NewDecoder(response.Body).Decode(&out); err != nil {
+		log.Fatalln("ERROR: Decode key resp", err)
 	}
 	key := out.Key
-	fmt.Println("tailscale-router: key is", key)
+	log.Println("key is", key)
 
-	fmt.Println("tailscale-router: grepping /etc/hosts to get fly-local-6pn")
+	log.Println("grepping /etc/hosts to get fly-local-6pn")
 	output, err := exec.Command("grep", "fly-local-6pn", "/etc/hosts").Output()
 	if err != nil {
-		fmt.Println("ERROR: get subnet")
-		panic(err)
+		log.Fatalln("ERROR: get subnet", err)
 	}
 
-	fmt.Println("tailscale-router: calculating subnet")
+	log.Println("calculating subnet")
 	subnet := strings.Join(strings.Split(strings.TrimSuffix(string(output), "\n"), ":")[0:3], ":") + "::/48"
 
 	tailscale_binary_path := "/app/tailscale"
@@ -81,52 +83,69 @@ func main() {
 	if runtime.GOOS == "darwin" {
 		output, err := exec.Command("bash", "-c", "ps -xo comm | grep MacOS/Tailscale").Output()
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		tailscale_binary_path = strings.TrimSuffix(string(output), "\n")
 	}
 
-	fmt.Println("tailscale-router: running tailscale up")
-	upcmd := exec.Command("bash", "-c", fmt.Sprintf("%s up --authkey=%s --advertise-routes=%s --advertise-exit-node", tailscale_binary_path, key, subnet))
-	err = upcmd.Run()
-	if err != nil {
-		panic(err)
+	allocID := os.Getenv("FLY_ALLOC_ID")
+	if len(allocID) > 5 {
+		allocID = allocID[0:5]
+	}
+	hostname := fmt.Sprintf("%s-%s-%s", os.Getenv("FLY_APP_NAME"), os.Getenv("FLY_REGION"), allocID)
+
+	log.Println("running tailscale up")
+	upcmd := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf(
+			"%s up --authkey=%s --hostname=%s --advertise-routes=%s --advertise-exit-node",
+			tailscale_binary_path,
+			key,
+			hostname,
+			subnet,
+		),
+	)
+	if err := upcmd.Run(); err != nil {
+		log.Fatal(err)
 	}
 
-	fmt.Println("tailscale-router: getting PublicKey from tailscale status")
-	output, err = exec.Command("bash", "-c", fmt.Sprintf("%s status --json | jq -r .Self.PublicKey", tailscale_binary_path)).Output()
+	log.Println("getting PublicKey from tailscale status")
+	output, err = exec.Command("bash", "-c", fmt.Sprintf("%s status --json | jq -r .Self.PublicKey", tailscale_binary_path)).
+		Output()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	nodeKey := strings.TrimSuffix(string(output), "\n")
 
-	fmt.Println("tailscale-router: getting all devices")
-	request, err = http.NewRequest("GET", fmt.Sprintf("https://api.tailscale.com/api/v2/tailnet/%s/devices", tailnet), nil)
+	log.Println("getting all devices")
+	request, err = http.NewRequest(
+		"GET",
+		fmt.Sprintf("https://api.tailscale.com/api/v2/tailnet/%s/devices", tailnet),
+		nil,
+	)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	request.SetBasicAuth(api_key, "")
 
 	client = &http.Client{}
-	response, error = client.Do(request)
-	if error != nil {
-		fmt.Println("ERROR: read devices")
-		panic(error)
+	response, err = client.Do(request)
+	if err != nil {
+		log.Fatalln("ERROR: Read devices", err)
 	}
 	defer response.Body.Close()
 
 	var devicesOut devicesResp
-	err = json.NewDecoder(response.Body).Decode(&devicesOut)
-	if err != nil {
-		fmt.Println("ERROR: Decode key resp")
-		panic(error)
+	if err := json.NewDecoder(response.Body).Decode(&devicesOut); err != nil {
+		log.Fatalln("ERROR: Decode key resp", err)
 	}
 
 	selfID := ""
 
-	fmt.Println("tailscale-router: finding our ID")
+	log.Println("finding our ID")
 	for _, v := range devicesOut.Devices {
 		if v.NodeKey == nodeKey {
 			selfID = v.ID
@@ -138,21 +157,25 @@ func main() {
 		"routes": ["%s"]
 	}`, subnet))
 
-	fmt.Println("tailscale-router: configuring routes")
-	request, err = http.NewRequest("POST", fmt.Sprintf("https://api.tailscale.com/api/v2/device/%s/routes", selfID), bytes.NewBuffer(jsonData))
+	log.Println("configuring routes")
+	request, err = http.NewRequest(
+		"POST",
+		fmt.Sprintf("https://api.tailscale.com/api/v2/device/%s/routes", selfID),
+		bytes.NewBuffer(jsonData),
+	)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	request.SetBasicAuth(api_key, "")
 
 	client = &http.Client{}
-	response, error = client.Do(request)
-	if error != nil {
-		panic(error)
+	response, err = client.Do(request)
+	if err != nil {
+		log.Fatal(err)
 	}
 	defer response.Body.Close()
 
-	fmt.Println("tailscale-router: fully configured")
+	log.Println("fully configured")
 	os.Exit(0)
 }

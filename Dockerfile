@@ -1,14 +1,14 @@
-ARG goversion=1.19
-ARG alpineversion=latest
+ARG goversion
+ARG alpineversion
 
-FROM golang:${goversion}-alpine as builder
+FROM docker.io/library/golang:${goversion}-alpine as builder
 WORKDIR /app
 COPY . ./
 
 RUN go mod download
 RUN go build
 
-FROM alpine:${alpineversion}
+FROM docker.io/library/alpine:${alpineversion}
 RUN apk --no-cache add ca-certificates iptables ip6tables bash bind-tools jq
 
 ARG tailscaleversion

@@ -5,9 +5,10 @@ on:
     branches: ['main']
 
 env:
-  goversion: 1.19
-  tailscaleversion: 1.40.1
-  dnsproxyversion: v0.45.2
+  tailscaleversion: '1.40.1'
+  dnsproxyversion: 'v0.45.2'
+  alpineversion: 'latest'
+  goversion: '1.20'
 
 jobs:
   build-and-push-image:
@@ -28,9 +29,10 @@ jobs:
           tags: latest ${{ env.tailscaleversion }}
           containerfiles: Dockerfile
           build-args: |
-            goversion=${{ env.goversion }}
             tailscaleversion=${{ env.tailscaleversion }}
             dnsproxyversion=${{ env.dnsproxyversion }}
+            alpineversion=${{ env.alpineversion }}
+            goversion=${{ env.goversion }}
       
       - name: Push to ghcr.io
         id: push-to-ghcr
