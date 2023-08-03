@@ -1,3 +1,3 @@
-module github.com/fly-apps/tailscale-router
+module github.com/ananthb/tailscale-router
 
-go 1.19
+go 1.20

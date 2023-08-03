@@ -76,7 +76,10 @@ func main() {
 	}
 
 	log.Println("calculating subnet")
-	subnet := strings.Join(strings.Split(strings.TrimSuffix(string(output), "\n"), ":")[0:3], ":") + "::/48"
+	subnet := strings.Join(
+		strings.Split(strings.TrimSuffix(string(output), "\n"), ":")[0:3],
+		":",
+	) + "::/48"
 
 	tailscale_binary_path := "/app/tailscale"
 
@@ -177,5 +180,6 @@ func main() {
 	defer response.Body.Close()
 
 	log.Println("fully configured")
+
 	os.Exit(0)
 }

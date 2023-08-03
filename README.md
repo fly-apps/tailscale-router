@@ -1,6 +1,6 @@
 # tailscale-router
 
-[![Publish container images](https://github.com/ananthb/tailscale-router/actions/workflows/containers.yml/badge.svg)](https://github.com/ananthb/tailscale-router/actions/workflows/containers.yml)
+[![CI](https://github.com/ananthb/tailscale-router/actions/workflows/ci.yml/badge.svg)](https://github.com/ananthb/tailscale-router/actions/workflows/ci.yml)
 
 ## How to use
 

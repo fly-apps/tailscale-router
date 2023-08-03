@@ -1,17 +1,17 @@
-name: Publish container images
+name: CI
 
 on:
   push:
     branches: ['main']
 
 env:
-  tailscaleversion: '1.40.1'
-  dnsproxyversion: 'v0.45.2'
+  tailscaleversion: '1.46.1'
+  dnsproxyversion: 'v0.52.0'
   alpineversion: 'latest'
   goversion: '1.20'
 
 jobs:
-  build-and-push-image:
+  publish-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
