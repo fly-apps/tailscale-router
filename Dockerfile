@@ -4,7 +4,9 @@ ARG alpineversion=latest
 FROM docker.io/library/golang:${goversion} as builder
 WORKDIR /app
 COPY . ./
-RUN env CGO_ENABLED=0 go build ./...
+ENV CGO_ENABLED=0
+RUN go build ./cmd/swarm
+RUN go build ./cmd/tsrouter
 
 FROM docker.io/library/alpine:${alpineversion}
 RUN apk --no-cache add ca-certificates iptables ip6tables bash bind-tools jq
@@ -18,6 +20,7 @@ RUN wget https://pkgs.tailscale.com/stable/${TSFILE} \
   && tar xzf ${TSFILE} --strip-components=1 \
   && wget https://github.com/AdguardTeam/dnsproxy/releases/download/${DNSPROXYVERSION}/${DNSPROXYFILE} \
   && tar xzf ${DNSPROXYFILE} --strip-components=1
+COPY --from=builder /app/swarm /app/swarm
 COPY --from=builder /app/tsrouter /app/tsrouter
 COPY init.sh /
 RUN mkdir -p /var/run/tailscale /var/cache/tailscale /var/lib/tailscale

@@ -8,5 +8,6 @@ sysctl -p /etc/sysctl.conf
 
 /app/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
 /app/linux-amd64/dnsproxy -u fdaa::3 &
+/app/tsrouter &
 
-exec /app/tsrouter
+exec /app/swarm
