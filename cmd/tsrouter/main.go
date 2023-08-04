@@ -24,7 +24,7 @@ type devicesResp struct {
 }
 
 func main() {
-	log.SetPrefix("tailscale-router ")
+	log.SetPrefix("tsrouter ")
 	log.Println("setting up")
 	tailnet := "-"
 	api_key := os.Getenv("TAILSCALE_API_TOKEN")

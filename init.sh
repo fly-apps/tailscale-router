@@ -10,4 +10,4 @@ sysctl -p /etc/sysctl.conf
 /app/linux-amd64/dnsproxy -u fdaa::3 &
 /app/tsrouter &
 
-exec /app/swarm
+exec /app/hive
