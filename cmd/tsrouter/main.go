@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 )
 
@@ -25,13 +25,12 @@ type devicesResp struct {
 
 func main() {
 	log.SetPrefix("tsrouter ")
-	log.Println("setting up")
-	tailnet := "-"
-	api_key := os.Getenv("TAILSCALE_API_TOKEN")
+	log.Println("starting")
 
-	log.Println("tailnet name", tailnet)
-	log.Println("api key", api_key)
+	apiKey := os.Getenv("TAILSCALE_API_TOKEN")
+	client := &http.Client{}
 
+	log.Println("creating auth key")
 	jsonData := []byte(`{
 		"capabilities": {
 			"devices": {
@@ -42,20 +41,12 @@ func main() {
 			}
 		}
 	}`)
-
-	log.Println("creating auth key")
-	request, err := http.NewRequest(
-		"POST",
-		fmt.Sprintf("https://api.tailscale.com/api/v2/tailnet/%s/keys", tailnet),
+	request := mustJSONRequest(
+		apiKey,
+		http.MethodPost,
+		"https://api.tailscale.com/api/v2/tailnet/-/keys",
 		bytes.NewBuffer(jsonData),
 	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	request.SetBasicAuth(api_key, "")
-
-	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
 		log.Fatalln("ERROR: Create key", err)
@@ -67,7 +58,6 @@ func main() {
 		log.Fatalln("ERROR: Decode key resp", err)
 	}
 	key := out.Key
-	log.Println("key is", key)
 
 	log.Println("grepping /etc/hosts to get fly-local-6pn")
 	output, err := exec.Command("grep", "fly-local-6pn", "/etc/hosts").Output()
@@ -81,15 +71,7 @@ func main() {
 		":",
 	) + "::/48"
 
-	tailscale_binary_path := "/app/tailscale"
-
-	if runtime.GOOS == "darwin" {
-		output, err := exec.Command("bash", "-c", "ps -xo comm | grep MacOS/Tailscale").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-		tailscale_binary_path = strings.TrimSuffix(string(output), "\n")
-	}
+	const tailscale_binary_path = "/app/tailscale"
 
 	allocID := os.Getenv("FLY_ALLOC_ID")
 	if len(allocID) > 5 {
@@ -110,31 +92,25 @@ func main() {
 		),
 	)
 	if err := upcmd.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatalln("ERROR: tailscale up", err)
 	}
 
 	log.Println("getting PublicKey from tailscale status")
 	output, err = exec.Command("bash", "-c", fmt.Sprintf("%s status --json | jq -r .Self.PublicKey", tailscale_binary_path)).
 		Output()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("ERROR: get PublicKey", err)
 	}
 
 	nodeKey := strings.TrimSuffix(string(output), "\n")
 
 	log.Println("getting all devices")
-	request, err = http.NewRequest(
-		"GET",
-		fmt.Sprintf("https://api.tailscale.com/api/v2/tailnet/%s/devices", tailnet),
+	request = mustJSONRequest(
+		apiKey,
+		http.MethodGet,
+		"https://api.tailscale.com/api/v2/tailnet/-/devices",
 		nil,
 	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	request.SetBasicAuth(api_key, "")
-
-	client = &http.Client{}
 	response, err = client.Do(request)
 	if err != nil {
 		log.Fatalln("ERROR: Read devices", err)
@@ -161,18 +137,13 @@ func main() {
 	}`, subnet))
 
 	log.Println("configuring routes")
-	request, err = http.NewRequest(
-		"POST",
+	request = mustJSONRequest(
+		apiKey,
+		http.MethodPost,
 		fmt.Sprintf("https://api.tailscale.com/api/v2/device/%s/routes", selfID),
 		bytes.NewBuffer(jsonData),
 	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	request.SetBasicAuth(api_key, "")
 
-	client = &http.Client{}
 	response, err = client.Do(request)
 	if err != nil {
 		log.Fatal(err)
@@ -180,6 +151,15 @@ func main() {
 	defer response.Body.Close()
 
 	log.Println("fully configured")
-
 	os.Exit(0)
+}
+
+func mustJSONRequest(apiKey, method, url string, body io.Reader) *http.Request {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	req.SetBasicAuth(apiKey, "")
+	return req
 }

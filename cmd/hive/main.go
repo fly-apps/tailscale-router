@@ -12,8 +12,8 @@ import (
 func main() {
 	log.SetPrefix("hive ")
 	h := &handlers.H{
-		APIHostname: os.Getenv("TAILSCALE_API_HOSTNAME"),
-		APIToken:    os.Getenv("TAILSCALE_API_TOKEN"),
+		FlyMachinesAPI: os.Getenv("FLY_MACHINES_API_HOSTNAME"),
+		FlyAPIToken:    os.Getenv("FLY_API_TOKEN"),
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/bees", h.ListBees)

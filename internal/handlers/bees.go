@@ -5,10 +5,10 @@ import (
 )
 
 type H struct {
-	APIHostname string
-	APIToken    string
+	FlyMachinesAPI string
+	FlyAPIToken    string
 }
 
-func (h *H) ListBees(w http.ResponseWriter, r *http.Request) {
+func (h H) ListBees(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("bees!"))
 }

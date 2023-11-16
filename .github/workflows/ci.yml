@@ -5,10 +5,10 @@ on:
     branches: ['main']
 
 env:
-  tailscaleversion: '1.46.1'
+  tailscaleversion: '1.54.0'
   dnsproxyversion: 'v0.52.0'
   alpineversion: 'latest'
-  goversion: '1.20'
+  goversion: '1.21'
 
 jobs:
   publish-image:
