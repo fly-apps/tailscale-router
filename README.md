@@ -1,15 +1,15 @@
 # tailscale-router
 
+[![CI](https://github.com/ananthb/tailscale-router/actions/workflows/ci.yml/badge.svg)](https://github.com/ananthb/tailscale-router/actions/workflows/ci.yml)
+
 ## How to use
-1. Clone this app locally
-2. Create an app  `flyctl apps create my-unique-tailscale-router-app-name`
-3. Get a secret from the tailscale admin console: tailscale admin console > settings > keys > `generate auth key` _(you probably want to choose the reusable and ephemeral options)_
-4. Set the token you get as a secret `flyctl secrets set TAILSCALE_AUTHKEY=thekeyyougot -a my-unique-tailscale-router-app-name`
-5. Build this repo `docker build -t registry.fly.io/my-unique-tailscale-router-app-name:latest .`
-6. Push the image `docker push registry.fly.io/my-unique-tailscale-router-app-name:latest`
-7. Deploy a machine `flyctl m run registry.fly.io/my-unique-tailscale-router-app-name:latest -a my-unique-tailscale-router-app-name --cpus 1 --memory 256`
-8. Follow steps `3` and `5` of https://tailscale.com/kb/1019/subnets/ to enable subnets for the machine that got automatically configured
-9. Enjoy
+
+1. Create an app  `flyctl apps create app-name`
+2. Get a secret from the tailscale admin console: tailscale admin console > settings > keys > `generate auth key` (you probably want to choose the reusable and ephemeral options).
+3. Set the token you get as a secret `flyctl secrets set TAILSCALE_AUTHKEY=thekeyyougot -a app-name`.
+4. Deploy a machine `flyctl m run ghcr.io/ananthb/tailscale-router:latest -a app-name --cpus 1 --memory 256`
+5. Follow steps `3` and `5` of <https://tailscale.com/kb/1019/subnets/> to enable subnets for the machine that got automatically configured.
+6. Enjoy
 
 ## Test it Out
 
@@ -17,10 +17,10 @@ You can test if it's working by finding the IP address of your new Fly.io app an
 
 ```bash
 # Get the IP address of your app:
-flyctl m list -a my-unique-tailscale-router-app-name
+flyctl m list -a app-name
 
 # Use dig to test DNS queries the DNS proxy setup in this repository
-dig @<your-app-ip-address-here> aaaa my-unique-tailscale-router-app-name.internal
+dig @<your-app-ip-address-here> aaaa app-name.internal
 ```
 
 ## DNS Setup
